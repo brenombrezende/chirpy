@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 )
 
@@ -21,7 +20,6 @@ func middlewareCors(next http.Handler) http.Handler {
 func (cfg *apiConfig) middlewareMetrics(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		cfg.fileserverHits++
-		fmt.Printf("middlewareMetricsInc used - Current Hits = %v\n", cfg.fileserverHits)
 		next.ServeHTTP(w, r)
 
 	})

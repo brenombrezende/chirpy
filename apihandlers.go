@@ -13,7 +13,7 @@ func handlerValidateApi(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type responseBody struct {
-		Valid bool `json:"valid"`
+		Body string `json:"cleaned_body,omitempty"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -36,9 +36,12 @@ func handlerValidateApi(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = respondWithJSON(w, 200, responseBody{
-		Valid: true,
-	})
+	clearedString := profanityChecker(string(req.Body))
+
+	resp := responseBody{
+		Body: clearedString,
+	}
+	err = respondWithJSON(w, 200, resp)
 	if err != nil {
 		log.Printf("Error - %v", err)
 	}
