@@ -9,10 +9,13 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+type apiConfig struct {
+	fileserverHits int
+}
+
 func main() {
 	const filepathRoot = "."
 	const port = "8080"
-
 	apiCfg := apiConfig{}
 	r := chi.NewRouter()
 

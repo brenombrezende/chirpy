@@ -5,17 +5,11 @@ import (
 	"net/http"
 )
 
-type apiConfig struct {
-	fileserverHits int
-}
-
-func (cfg *apiConfig) middlewareMetricsInc(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		cfg.fileserverHits++
-		fmt.Printf("middlewareMetricsInc used - Current Hits = %v\n", cfg.fileserverHits)
-		next.ServeHTTP(w, r)
-
-	})
+func handlerReadiness(w http.ResponseWriter, r *http.Request) {
+	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(http.StatusText(http.StatusOK)))
+	fmt.Printf("handlerReadiness endpoint called\n")
 }
 
 func (cfg *apiConfig) handlerResetMetrics(w http.ResponseWriter, r *http.Request) {
