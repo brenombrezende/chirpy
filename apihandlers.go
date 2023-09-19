@@ -2,56 +2,44 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 )
 
 func handlerValidateApi(w http.ResponseWriter, r *http.Request) {
 
-	fmt.Printf("handlerValidateApi called\n")
-
-	type params struct {
+	type requestBody struct {
 		Body string `json:"body,omitempty"`
 	}
 
+	type responseBody struct {
+		Valid bool `json:"valid"`
+	}
+
 	decoder := json.NewDecoder(r.Body)
-	p := params{}
-	err := decoder.Decode(&p)
+	req := requestBody{}
+	err := decoder.Decode(&req)
 	if err != nil {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(500)
-		dat := params{
+		respondWithJSON(w, 500, requestBody{
 			Body: "Something went wrong",
-		}
-		resp, _ := json.Marshal(dat)
-		w.Write(resp)
+		})
 
 		log.Printf("Error decoding parameters: %s", err)
 		return
 	}
 
-	if len(p.Body) > 140 {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(400)
-		dat := params{
+	if len(req.Body) > 140 {
+		respondWithJSON(w, 400, requestBody{
 			Body: "Chirp is too long",
-		}
-		resp, _ := json.Marshal(dat)
-		w.Write(resp)
+		})
 
-		log.Printf("Body too long - %v characters: ", len(p.Body))
 		return
 	}
 
-	validated := struct {
-		Valid bool `json:"valid"`
-	}{
+	err = respondWithJSON(w, 200, responseBody{
 		Valid: true,
+	})
+	if err != nil {
+		log.Printf("Error - %v", err)
 	}
-
-	dat, _ := json.Marshal(validated)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(200)
-	w.Write(dat)
 }

@@ -14,8 +14,8 @@ type apiConfig struct {
 }
 
 func main() {
-	const filepathRoot = "/"
-	const port = "80"
+	const filepathRoot = "."
+	const port = "8080"
 	apiCfg := apiConfig{}
 
 	router := chi.NewRouter()
