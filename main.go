@@ -17,17 +17,26 @@ func main() {
 	const filepathRoot = "."
 	const port = "8080"
 	apiCfg := apiConfig{}
-	r := chi.NewRouter()
 
-	fsHandler := apiCfg.middlewareMetricsInc(http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot))))
-	r.Handle("/app", fsHandler)
-	r.Handle("/app/*", fsHandler)
+	router := chi.NewRouter()
+	routerApi := chi.NewRouter()
+	routerAdmin := chi.NewRouter()
 
-	r.Get("/healthz", handlerReadiness)
-	r.Get("/reset", apiCfg.handlerResetMetrics)
-	r.HandleFunc("/metrics", apiCfg.handlerDisplayMetrics)
-	corsMux := middlewareCors(r)
+	router.Mount("/api", routerApi)
+	router.Mount("/admin", routerAdmin)
 
+	fsHandler := apiCfg.middlewareMetrics(http.StripPrefix("/app", http.FileServer(http.Dir(filepathRoot))))
+	router.Handle("/app", fsHandler)
+	router.Handle("/app/*", fsHandler)
+	router.Handle("/", fsHandler)
+
+	routerApi.Get("/healthz", handlerHealthCheck)
+	routerApi.Get("/reset", apiCfg.handlerResetMetrics)
+	routerApi.Post("/validate_chirp", handlerValidateApi)
+
+	routerAdmin.HandleFunc("/metrics", apiCfg.handlerDisplayMetrics)
+
+	corsMux := middlewareCors(router)
 	srv := &http.Server{
 		Addr:    ":" + port,
 		Handler: corsMux,

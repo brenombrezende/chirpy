@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-func handlerReadiness(w http.ResponseWriter, r *http.Request) {
+func handlerHealthCheck(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte(http.StatusText(http.StatusOK)))
@@ -22,8 +22,9 @@ func (cfg *apiConfig) handlerResetMetrics(w http.ResponseWriter, r *http.Request
 }
 
 func (cfg *apiConfig) handlerDisplayMetrics(w http.ResponseWriter, r *http.Request) {
-	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
+	htmlTemplate := "<html><body><h1>Welcome, Chirpy Admin</h1><p>Chirpy has been visited %d times!</p></body></html>"
+	w.Header().Add("Content-Type", "text/html; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(fmt.Sprintf("Hits: %d", cfg.fileserverHits)))
+	w.Write([]byte(fmt.Sprintf(htmlTemplate, cfg.fileserverHits)))
 	fmt.Printf("handlerDisplayMetrics endpoint called - Current Hits = %v\n", cfg.fileserverHits)
 }
