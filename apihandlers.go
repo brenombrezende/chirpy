@@ -41,7 +41,7 @@ func handlerValidateApi(w http.ResponseWriter, r *http.Request) {
 	resp := responseBody{
 		Body: clearedString,
 	}
-	err = respondWithJSON(w, 200, resp)
+	err = respondWithJSON(w, 201, resp)
 	if err != nil {
 		log.Printf("Error - %v", err)
 	}
