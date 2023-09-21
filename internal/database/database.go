@@ -23,16 +23,6 @@ type DBStructure struct {
 
 var dbName string = "database.json"
 
-func CreateChirp(body string) (Chirp, error) {
-	c := Chirp{}
-
-	err := os.WriteFile(dbName, []byte(body), 0666)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return c, nil
-}
-
 // GetChirps returns all chirps in the database
 func (db *DB) GetChirps() ([]Chirp, error) {
 	test := []Chirp{}
