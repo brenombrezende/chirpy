@@ -6,14 +6,15 @@ import (
 	"net/http"
 )
 
-func handlerValidateApi(w http.ResponseWriter, r *http.Request) {
+type Chirp struct {
+	ID   int    `json:"id"`
+	Body string `json:"body"`
+}
+
+func (cfg *apiConfig) handlerValidateChirp(w http.ResponseWriter, r *http.Request) {
 
 	type requestBody struct {
 		Body string `json:"body,omitempty"`
-	}
-
-	type responseBody struct {
-		Body string `json:"cleaned_body,omitempty"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -38,10 +39,12 @@ func handlerValidateApi(w http.ResponseWriter, r *http.Request) {
 
 	clearedString := profanityChecker(string(req.Body))
 
-	resp := responseBody{
-		Body: clearedString,
+	chirp, err := cfg.DB.CreateChirp(clearedString)
+	if err != nil {
+		log.Printf("Unable to write chirp into disk - %s", err)
 	}
-	err = respondWithJSON(w, 201, resp)
+
+	err = respondWithJSON(w, 201, chirp)
 	if err != nil {
 		log.Printf("Error - %v", err)
 	}

@@ -16,6 +16,7 @@ func (cfg *apiConfig) handlerResetMetrics(w http.ResponseWriter, r *http.Request
 	w.Header().Add("Content-Type", "text/plain; charset=utf-8")
 	w.WriteHeader(http.StatusOK)
 	cfg.fileserverHits = 0
+	cfg.DB.ClearChirps()
 	w.Write([]byte("Metrics reset to 0"))
 	fmt.Printf("handlerResetMetrics endpoint called - Current Hits = %v\n", cfg.fileserverHits)
 
