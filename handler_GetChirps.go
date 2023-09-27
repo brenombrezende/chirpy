@@ -1,23 +1,28 @@
 package main
 
 import (
-	"encoding/json"
-	"log"
 	"net/http"
-	"sort"
+	"strconv"
+
+	"github.com/go-chi/chi/v5"
 )
 
 func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
 
 	chirps, err := cfg.DB.GetChirps()
 	if err != nil {
-		log.Print("Error getting chirps - %s", err)
+		respondWithError(w, http.StatusInternalServerError, "Couldn't retrieve chirps")
 	}
 
-	json.Marshal(chirps)
+	id := chi.URLParam(r, "chirpID")
+	idInt, _ := strconv.Atoi(id)
 
-	sort.Slice(chirps, func(i, j int) bool { return chirps[i].Id < chirps[j].Id })
-
-	respondWithJSON(w, 200, chirps)
-
+	for i := range chirps {
+		if chirps[i].Id == idInt {
+			response := chirps[i]
+			respondWithJSON(w, 200, response)
+			return
+		}
+	}
+	respondWithJSON(w, 404, "")
 }

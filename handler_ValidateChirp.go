@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 )
@@ -41,11 +42,11 @@ func (cfg *apiConfig) handlerValidateChirp(w http.ResponseWriter, r *http.Reques
 
 	chirp, err := cfg.DB.CreateChirp(clearedString)
 	if err != nil {
-		log.Printf("Unable to write chirp into disk - %s", err)
+		respondWithError(w, http.StatusInternalServerError, "Unable to write chirp into disk")
 	}
 
 	err = respondWithJSON(w, 201, chirp)
 	if err != nil {
-		log.Printf("Error - %v", err)
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprint(err))
 	}
 }

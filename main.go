@@ -43,7 +43,7 @@ func main() {
 
 	routerApi.Get("/healthz", handlerHealthCheck)
 	routerApi.Get("/reset", apiCfg.handlerResetMetrics)
-	routerApi.Get("/chirps", apiCfg.handlerGetChirps)
+	routerApi.Get("/chirps/{chirpID}", apiCfg.handlerGetChirps)
 	routerApi.Post("/chirps", apiCfg.handlerValidateChirp)
 
 	routerAdmin.HandleFunc("/metrics", apiCfg.handlerDisplayMetrics)
