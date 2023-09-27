@@ -4,16 +4,19 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-)
 
-type Chirp struct {
-	ID   int    `json:"id"`
-	Body string `json:"body"`
-}
+	"golang.org/x/crypto/bcrypt"
+)
 
 func (cfg *apiConfig) handlerValidateUsers(w http.ResponseWriter, r *http.Request) {
 
 	type requestBody struct {
+		Email    string `json:"email"`
+		Password string `jason:"password"`
+	}
+
+	type responseBody struct {
+		Id    int    `json:"id"`
 		Email string `json:"email"`
 	}
 
@@ -25,13 +28,24 @@ func (cfg *apiConfig) handlerValidateUsers(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	user, err := cfg.DB.CreateUser(req.Email)
+	hashedPW, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "Unable to write user into disk")
+		respondWithError(w, http.StatusInternalServerError, "Unable to properly hash password")
 		return
 	}
 
-	err = respondWithJSON(w, 201, user)
+	user, err := cfg.DB.CreateUser(req.Email, string(hashedPW))
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Unable to create user - %s", err))
+		return
+	}
+
+	res := responseBody{
+		Id:    user.Id,
+		Email: user.Email,
+	}
+
+	err = respondWithJSON(w, 201, res)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, fmt.Sprint(err))
 		return

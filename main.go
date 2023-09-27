@@ -46,6 +46,7 @@ func main() {
 	routerApi.Get("/chirps/{chirpID}", apiCfg.handlerGetChirps)
 	routerApi.Post("/chirps", apiCfg.handlerValidateChirp)
 	routerApi.Post("/users", apiCfg.handlerValidateUsers)
+	routerApi.Post("/login", apiCfg.handlerLogin)
 
 	routerAdmin.HandleFunc("/metrics", apiCfg.handlerDisplayMetrics)
 
