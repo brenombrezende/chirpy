@@ -58,6 +58,20 @@ func (db *DB) CreateChirp(body string) (Chirp, error) {
 	return chirp, nil
 }
 
+// GetChirps returns all chirps in the database
+func (db *DB) GetChirps() ([]Chirp, error) {
+	data, err := db.loadDB()
+	if err != nil {
+		return nil, err
+	}
+
+	chirps := []Chirp{}
+	for i := range data.Chirps {
+		chirps = append(chirps, data.Chirps[i])
+	}
+	return chirps, nil
+}
+
 func (db *DB) CreateUser(email, password string) (User, error) {
 	dbStructure, err := db.loadDB()
 	if err != nil {
@@ -86,18 +100,29 @@ func (db *DB) CreateUser(email, password string) (User, error) {
 	return user, nil
 }
 
-// GetChirps returns all chirps in the database
-func (db *DB) GetChirps() ([]Chirp, error) {
-	data, err := db.loadDB()
+func (db *DB) UpdateUser(email, password string, id int) (User, error) {
+	dbStructure, err := db.loadDB()
 	if err != nil {
-		return nil, err
+		return User{}, err
 	}
 
-	chirps := []Chirp{}
-	for i := range data.Chirps {
-		chirps = append(chirps, data.Chirps[i])
+	updatedUser := User{
+		Email:    email,
+		Password: password,
 	}
-	return chirps, nil
+
+	for _, user := range dbStructure.Users {
+		if id == user.Id {
+			dbStructure.Users[user.Id] = updatedUser
+		}
+	}
+
+	err = db.writeDB(dbStructure)
+	if err != nil {
+		return User{}, err
+	}
+
+	return updatedUser, nil
 }
 
 // GetChirps returns all users in the database

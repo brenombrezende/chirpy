@@ -8,16 +8,24 @@ import (
 
 	"github.com/brenombrezende/chirpy/internal/database"
 	"github.com/go-chi/chi/v5"
+	"github.com/joho/godotenv"
 )
 
 type apiConfig struct {
 	fileserverHits int
 	DB             *database.DB
+	jwtSecret      string
 }
 
 func main() {
-	const filepathRoot = "."
-	const port = "8080"
+
+	err := godotenv.Load(".env")
+	if err != nil {
+		log.Fatalf("Error loading .env file - %s", err)
+	}
+
+	filepathRoot := os.Getenv("FILE_PATH_ROOT")
+	port := os.Getenv("PORT")
 
 	db, err := database.NewDB("database.json")
 	if err != nil {
@@ -27,6 +35,7 @@ func main() {
 	apiCfg := apiConfig{
 		fileserverHits: 0,
 		DB:             db,
+		jwtSecret:      os.Getenv("JWT_SECRET"),
 	}
 
 	router := chi.NewRouter()
@@ -45,8 +54,9 @@ func main() {
 	routerApi.Get("/reset", apiCfg.handlerResetMetrics)
 	routerApi.Get("/chirps/{chirpID}", apiCfg.handlerGetChirps)
 	routerApi.Post("/chirps", apiCfg.handlerValidateChirp)
-	routerApi.Post("/users", apiCfg.handlerValidateUsers)
-	routerApi.Post("/login", apiCfg.handlerLogin)
+	routerApi.Post("/users", apiCfg.handlerCreateUsers)
+	routerApi.Post("/login", apiCfg.handlerLoginUsers)
+	routerApi.Put("/users", apiCfg.handlerPasswordChange)
 
 	routerAdmin.HandleFunc("/metrics", apiCfg.handlerDisplayMetrics)
 
