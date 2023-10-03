@@ -19,6 +19,7 @@ func (cfg *apiConfig) handlerLoginUsers(w http.ResponseWriter, r *http.Request) 
 	type responseBody struct {
 		Id            int    `json:"id"`
 		Email         string `json:"email"`
+		Is_chirpy_red bool   `json:"is_chirpy_red"`
 		Token         string `json:"token"`
 		Refresh_Token string `json:"refresh_token"`
 	}
@@ -62,6 +63,7 @@ func (cfg *apiConfig) handlerLoginUsers(w http.ResponseWriter, r *http.Request) 
 			res := responseBody{
 				Id:            user.Id,
 				Email:         user.Email,
+				Is_chirpy_red: user.Is_chirpy_red,
 				Token:         loginToken,
 				Refresh_Token: refreshToken,
 			}

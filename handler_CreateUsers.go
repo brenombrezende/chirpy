@@ -16,8 +16,9 @@ func (cfg *apiConfig) handlerCreateUsers(w http.ResponseWriter, r *http.Request)
 	}
 
 	type responseBody struct {
-		Id    int    `json:"id"`
-		Email string `json:"email"`
+		Id            int    `json:"id"`
+		Email         string `json:"email"`
+		Is_chirpy_red bool   `json:"is_chirpy_red"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -41,8 +42,9 @@ func (cfg *apiConfig) handlerCreateUsers(w http.ResponseWriter, r *http.Request)
 	}
 
 	res := responseBody{
-		Id:    user.Id,
-		Email: user.Email,
+		Id:            user.Id,
+		Email:         user.Email,
+		Is_chirpy_red: user.Is_chirpy_red,
 	}
 
 	err = respondWithJSON(w, 201, res)

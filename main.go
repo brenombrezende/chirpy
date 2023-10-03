@@ -15,6 +15,7 @@ type apiConfig struct {
 	fileserverHits int
 	DB             *database.DB
 	jwtSecret      string
+	polkaKey       string
 }
 
 func main() {
@@ -36,6 +37,7 @@ func main() {
 		fileserverHits: 0,
 		DB:             db,
 		jwtSecret:      os.Getenv("JWT_SECRET"),
+		polkaKey:       os.Getenv("POLKA_KEY"),
 	}
 
 	router := chi.NewRouter()
@@ -60,6 +62,7 @@ func main() {
 	routerApi.Post("/login", apiCfg.handlerLoginUsers)
 	routerApi.Post("/refresh", apiCfg.handlerTokenRefresher)
 	routerApi.Post("/revoke", apiCfg.handlerTokenRevoker)
+	routerApi.Post("/polka/webhooks", apiCfg.handlerPolkaEvent)
 
 	routerApi.Put("/users", apiCfg.handlerPasswordChange)
 
