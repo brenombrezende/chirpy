@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"sync"
+	"time"
 )
 
 type DB struct {
@@ -13,8 +14,9 @@ type DB struct {
 }
 
 type Chirp struct {
-	Id   int    `json:"id"`
-	Body string `json:"body"`
+	Id        int    `json:"id"`
+	Body      string `json:"body"`
+	Author_Id int    `json:"author_id"`
 }
 
 type User struct {
@@ -23,9 +25,15 @@ type User struct {
 	Password string `json:"password"`
 }
 
+type RevokedToken struct {
+	Id        string    `json:"id"`
+	RevokedAt time.Time `json:"revoked_at"`
+}
+
 type DBStructure struct {
-	Chirps map[int]Chirp `json:"chirps"`
-	Users  map[int]User  `json:"users"`
+	Chirps        map[int]Chirp           `json:"chirps"`
+	Users         map[int]User            `json:"users"`
+	RevokedTokens map[string]RevokedToken `json:"RevokedTokens"`
 }
 
 func NewDB(path string) (*DB, error) {
@@ -38,15 +46,16 @@ func NewDB(path string) (*DB, error) {
 }
 
 // CreateChirp creates a new chirp and saves it to disk
-func (db *DB) CreateChirp(body string) (Chirp, error) {
+func (db *DB) CreateChirp(body string, author_id int) (Chirp, error) {
 	dbStructure, err := db.loadDB()
 	if err != nil {
 		return Chirp{}, err
 	}
 	id := len(dbStructure.Chirps) + 1
 	chirp := Chirp{
-		Id:   id,
-		Body: body,
+		Id:        id,
+		Body:      body,
+		Author_Id: author_id,
 	}
 	dbStructure.Chirps[id] = chirp
 
@@ -56,6 +65,26 @@ func (db *DB) CreateChirp(body string) (Chirp, error) {
 	}
 
 	return chirp, nil
+}
+
+func (db *DB) DeleteChirp(chirpID, author_id int) error {
+	dbStructure, err := db.loadDB()
+	if err != nil {
+		return err
+	}
+
+	if dbStructure.Chirps[chirpID].Author_Id != author_id {
+		return errors.New("not authorized")
+	}
+
+	delete(dbStructure.Chirps, chirpID)
+
+	err = db.writeDB(dbStructure)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // GetChirps returns all chirps in the database
@@ -98,6 +127,41 @@ func (db *DB) CreateUser(email, password string) (User, error) {
 	}
 
 	return user, nil
+}
+
+func (db *DB) RevokeToken(tokenstring string) error {
+	dbStructure, err := db.loadDB()
+	if err != nil {
+		return err
+	}
+
+	currentDate := time.Now()
+
+	token := RevokedToken{
+		Id:        tokenstring,
+		RevokedAt: currentDate,
+	}
+	dbStructure.RevokedTokens[tokenstring] = token
+
+	err = db.writeDB(dbStructure)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db *DB) GetRevokedTokens() ([]RevokedToken, error) {
+	data, err := db.loadDB()
+	if err != nil {
+		return nil, err
+	}
+
+	allTokens := []RevokedToken{}
+	for i := range data.RevokedTokens {
+		allTokens = append(allTokens, data.RevokedTokens[i])
+	}
+	return allTokens, nil
 }
 
 func (db *DB) UpdateUser(email, password string, id int) (User, error) {
@@ -150,8 +214,9 @@ func (db *DB) ClearChirps() error {
 
 func (db *DB) createDB() error {
 	dbStructure := DBStructure{
-		Chirps: map[int]Chirp{},
-		Users:  map[int]User{},
+		Chirps:        map[int]Chirp{},
+		Users:         map[int]User{},
+		RevokedTokens: map[string]RevokedToken{},
 	}
 	return db.writeDB(dbStructure)
 }

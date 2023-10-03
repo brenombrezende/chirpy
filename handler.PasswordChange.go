@@ -25,9 +25,15 @@ func (cfg *apiConfig) handlerPasswordChange(w http.ResponseWriter, r *http.Reque
 	splitToken := strings.Split(reqToken, "Bearer ")
 	reqToken = splitToken[1]
 
-	idFromToken, err := cfg.validateJWT(reqToken)
+	token, err := cfg.validateJWT(reqToken)
 	if err != nil {
 		respondWithError(w, 401, "Internal server error")
+		return
+	}
+
+	if token.(TokenInfoStruct).issuer == "chirpy-refresh" {
+		respondWithJSON(w, 401, "Unauthorized")
+		return
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -44,7 +50,7 @@ func (cfg *apiConfig) handlerPasswordChange(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	user, err := cfg.DB.UpdateUser(req.Email, string(hashedPW), idFromToken)
+	user, err := cfg.DB.UpdateUser(req.Email, string(hashedPW), token.(TokenInfoStruct).id)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("Unable to create user - %s", err))
 		return
@@ -52,7 +58,7 @@ func (cfg *apiConfig) handlerPasswordChange(w http.ResponseWriter, r *http.Reque
 
 	res := responseBody{
 		Email: user.Email,
-		Id:    idFromToken,
+		Id:    token.(TokenInfoStruct).id,
 	}
 
 	err = respondWithJSON(w, 200, res)

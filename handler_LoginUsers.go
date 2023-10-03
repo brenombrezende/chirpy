@@ -17,9 +17,10 @@ func (cfg *apiConfig) handlerLoginUsers(w http.ResponseWriter, r *http.Request) 
 	}
 
 	type responseBody struct {
-		Id    int    `json:"id"`
-		Email string `json:"email"`
-		Token string `json:"token"`
+		Id            int    `json:"id"`
+		Email         string `json:"email"`
+		Token         string `json:"token"`
+		Refresh_Token string `json:"refresh_token"`
 	}
 
 	decoder := json.NewDecoder(r.Body)
@@ -33,6 +34,7 @@ func (cfg *apiConfig) handlerLoginUsers(w http.ResponseWriter, r *http.Request) 
 	usersDB, err := cfg.DB.GetUsers()
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Unable to fetch users")
+		return
 	}
 
 	for _, user := range usersDB {
@@ -44,17 +46,24 @@ func (cfg *apiConfig) handlerLoginUsers(w http.ResponseWriter, r *http.Request) 
 				return
 			}
 
-			expiration := setExpirationTime(req.Expires_in_Seconds)
 			id := user.Id
-			token, err := cfg.createJWT(id, expiration)
+			loginToken, err := cfg.createJWT(id, false)
 			if err != nil {
 				respondWithError(w, 500, fmt.Sprintf("Unable to generate JWT token, %s", err))
+				return
+			}
+
+			refreshToken, err := cfg.createJWT(id, true)
+			if err != nil {
+				respondWithError(w, 500, fmt.Sprintf("Unable to generate JWT token, %s", err))
+				return
 			}
 
 			res := responseBody{
-				Id:    user.Id,
-				Email: user.Email,
-				Token: token,
+				Id:            user.Id,
+				Email:         user.Email,
+				Token:         loginToken,
+				Refresh_Token: refreshToken,
 			}
 
 			err = respondWithJSON(w, 200, res)
@@ -67,18 +76,4 @@ func (cfg *apiConfig) handlerLoginUsers(w http.ResponseWriter, r *http.Request) 
 		}
 	}
 	respondWithJSON(w, 403, "Not authorized.")
-}
-
-func setExpirationTime(expires_in_seconds int) int {
-
-	if expires_in_seconds == 0 {
-		return 86400
-	}
-
-	if expires_in_seconds > 86400 {
-		return 86400
-	}
-
-	return expires_in_seconds
-
 }

@@ -52,11 +52,18 @@ func main() {
 
 	routerApi.Get("/healthz", handlerHealthCheck)
 	routerApi.Get("/reset", apiCfg.handlerResetMetrics)
-	routerApi.Get("/chirps/{chirpID}", apiCfg.handlerGetChirps)
-	routerApi.Post("/chirps", apiCfg.handlerValidateChirp)
+	routerApi.Get("/chirps", apiCfg.handlerGetChirps)
+	routerApi.Get("/chirps/{chirpID}", apiCfg.handlerGetChirpsWithId)
+
+	routerApi.Post("/chirps", apiCfg.handlerCreateChirp)
 	routerApi.Post("/users", apiCfg.handlerCreateUsers)
 	routerApi.Post("/login", apiCfg.handlerLoginUsers)
+	routerApi.Post("/refresh", apiCfg.handlerTokenRefresher)
+	routerApi.Post("/revoke", apiCfg.handlerTokenRevoker)
+
 	routerApi.Put("/users", apiCfg.handlerPasswordChange)
+
+	routerApi.Delete("/chirps/{chirpID}", apiCfg.handlerDeleteChirp)
 
 	routerAdmin.HandleFunc("/metrics", apiCfg.handlerDisplayMetrics)
 

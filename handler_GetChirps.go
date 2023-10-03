@@ -2,9 +2,7 @@ package main
 
 import (
 	"net/http"
-	"strconv"
-
-	"github.com/go-chi/chi/v5"
+	"sort"
 )
 
 func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
@@ -14,15 +12,9 @@ func (cfg *apiConfig) handlerGetChirps(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't retrieve chirps")
 	}
 
-	id := chi.URLParam(r, "chirpID")
-	idInt, _ := strconv.Atoi(id)
+	sort.Slice(chirps, func(i, j int) bool {
+		return chirps[i].Id < chirps[j].Id
+	})
 
-	for i := range chirps {
-		if chirps[i].Id == idInt {
-			response := chirps[i]
-			respondWithJSON(w, 200, response)
-			return
-		}
-	}
-	respondWithJSON(w, 404, "")
+	respondWithJSON(w, 200, chirps)
 }
